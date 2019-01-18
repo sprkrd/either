@@ -25,25 +25,23 @@
 
 namespace ash {
 
-namespace detail {
-
-template<typename T1, typename T2, typename T3 = void>
-using enable_if_different_t = typename std::enable_if<!std::is_same<T1,T2>::value, T3>::type;
-
-template<typename T1, typename T2, typename T3 = void>
-using enable_if_same_t = typename std::enable_if<std::is_same<T1,T2>::value, T3>::type;
-
-} // end namespace detail
-
 template<class Left, class Right>
 class Either {
+  static_assert(!std::is_same<Left,Right>::value, "Left and Right types cannot be equal");
+
+  private:
+
+    template<class LeftMapper, class RightMapper>
+    struct return_type {
+      typedef decltype(std::declval<LeftMapper>()(std::declval<Left>())) type;
+      typedef decltype(std::declval<RightMapper>()(std::declval<Right>())) type_;
+      static_assert(std::is_same<type,type_>::value, "Both mappers must return the same type");
+    };
+
+    template<class LeftMapper, class RightMapper>
+    using return_type_t = typename return_type<LeftMapper,RightMapper>::type;
+
   public:
-
-    template<class RetType>
-    using LeftMap = std::function<RetType(const Left&)>;
-
-    template<class RetType>
-    using RightMap = std::function<RetType(const Right&)>;
 
     Either(const Either& other) {
       copy(other);
@@ -56,14 +54,12 @@ class Either {
     Either(const Left& left) : _left(left), _is_left(true) {
     }
 
-    template<typename R=Right, typename=detail::enable_if_different_t<Left, R>>
     Either(const Right& right) : _right(right), _is_left(false) {
     }
 
     Either(Left&& left) noexcept : _left(std::move(left)), _is_left(true) {
     }
 
-    template<typename R=Right, typename=detail::enable_if_different_t<Left, R>>
     Either(Right&& right) noexcept : _right(std::move(right)), _is_left(false) {
     }
 
@@ -84,7 +80,6 @@ class Either {
       return *this;
     }
 
-    template<typename R=Right, typename=detail::enable_if_different_t<Left, R>>
     Either& operator=(const Right& right) {
       destroy();
       new(&_right) Right(right);
@@ -99,7 +94,6 @@ class Either {
       return *this;
     }
 
-    template<typename R=Right, typename=detail::enable_if_different_t<Left, R>>
     Either& operator=(Right&& right) noexcept {
       destroy();
       new(&_right) Right(std::move(right));
@@ -127,21 +121,9 @@ class Either {
       return _right;
     }
 
-    template<class RetType>
-    Either<RetType, Right> leftMap(LeftMap<RetType> lambda) const {
-      if (_is_left) return Either<RetType, Right>(lambda(_left));
-      return Either<RetType, Right>(_right);
-    }
-
-    template<class RetType>
-    Either<Left, RetType> rightMap(RightMap<RetType> lambda) const {
-      if (not _is_left) return Either<Left, RetType>(lambda(_right));
-      return Either<Left, RetType>(_left);
-    }
-
-    template<typename R=Right, typename=detail::enable_if_same_t<Left, R>>
-    const Left& join() const {
-      return _is_left? _left : _right;
+    template<class LeftMapper, class RightMapper>
+    return_type_t<LeftMapper,RightMapper> join(const LeftMapper& left_mapper, const RightMapper& right_mapper) const {
+      return _is_left? left_mapper(_left) : right_mapper(_right);
     }
 
     ~Either() {
