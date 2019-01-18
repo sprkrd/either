@@ -29,9 +29,11 @@ ostream& operator<<(ostream& out, const Either<int, string>& either) {
 int main(int /*argc*/, char ** /*argv[]*/) {
   Either<int, string> number_or_string("hello world");
   cout << number_or_string << endl;
-  number_or_string = 42;
+  //number_or_string = 42;
   cout << number_or_string << endl;
-  //auto joined = number_or_string.leftMap([](const int& x) {return string("forty two");});
+  function<string(const int&)> f = [](const int& x) {return string("forty two");};
+  auto joined = number_or_string.leftMap(f).join();
+  cout << joined << endl;
 }
 
 
