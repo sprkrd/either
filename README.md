@@ -1,6 +1,35 @@
 # Either's implementation
 
-My project description goes here...
+Implementation of `Either`, a union-based type to store either of two types
+of value. Copy/move constructors/assignments behave as one would expect. It
+supports a `join` operation to map left and right value into a common type.
+
+An example of usage can be found in src/either_example.cpp. This is
+a header-only library, so it is enough to copy its header (include/ash/either.hpp)
+to your project.
+
+`Either` only works when using different types (say, `Either<int,int>` will
+not compile). This library is compatible with C++11 onwards.
+
+## Instructions
+
+To use, just copy the header file to your project and include it in the sources
+in which you want to use it.
+
+To build the example and the test:
+```
+make build
+cd build
+cmake ..
+make
+```
+
+Then, to run the tests:
+```
+make test
+```
+
+The example can be executed from the `bin` folder.
 
 ## License
 
