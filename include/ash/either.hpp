@@ -18,7 +18,6 @@
 #ifndef _ASH_EITHER_HPP_
 #define _ASH_EITHER_HPP_
 
-#include <functional>
 #include <type_traits>
 #include <stdexcept>
 #include <utility>
