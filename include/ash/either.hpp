@@ -63,11 +63,13 @@ class Either {
     }
 
     Either& operator=(const Either& other) {
+      destroy();
       copy(other);
       return *this;
     }
 
     Either& operator=(Either&& other) noexcept {
+      destroy();
       move(other);
       return *this;
     }
@@ -143,13 +145,15 @@ class Either {
     }
 
     void copy(const Either& other) {
-      if (other._is_left) *this = other._left;
-      else *this = other._right;
+      _is_left = other._is_left;
+      if (other._is_left) new (&_left) Left(other._left);
+      else new (&_right) Right(other._right);
     }
 
     void move(Either&& other) {
-      if (other._is_left) *this = std::move(other._left);
-      else *this = std::move(other._right);
+      _is_left = other._is_left;
+      if (other._is_left) new (&_left) Left(std::move(other._left));
+      else new (&_right) Right(std::move(other._right));
     }
 };
 
